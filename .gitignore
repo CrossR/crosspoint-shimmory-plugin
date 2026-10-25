@@ -1,0 +1,3 @@
+.autoloop/
+__pycache__/
+*.pyc
