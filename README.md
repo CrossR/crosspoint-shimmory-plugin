@@ -43,3 +43,7 @@ The package uses only Python and Node standard-library tooling.
 The verification gate checks the manifest and payload contract, secret-safe
 browser behavior, deterministic packaging, exact ZIP contents, and an executable
 fake-DOM/API smoke test.
+
+## Acknowledgments
+
+Based on the [BookOrbit plugin](https://github.com/samfoy/crosspoint-bookorbit-plugin) by [@samfoy](https://github.com/samfoy).
