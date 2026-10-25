@@ -73,7 +73,7 @@ class ShimmoryContractTests(unittest.TestCase):
         self.assertEqual(set(handler), {"request", "connect"})
         request = handler["request"]
         self.assertEqual(request["method"], "POST")
-        self.assertEqual(request["url"], "{cfg.apiBase}/koreader/plugin/sessions")
+        self.assertEqual(request["url"], "{cfg.apiBase}/koreader/plugin/page-stats")
         self.assertEqual(
             request["headers"],
             {
