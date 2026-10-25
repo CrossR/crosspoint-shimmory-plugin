@@ -1,0 +1,6 @@
+{
+  "title": "Shimmory Reading Sync",
+  "description": "Send completed CrossPoint reading sessions to Shimmory.",
+  "version": "1.0.0",
+  "mount": "settings"
+}

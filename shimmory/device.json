@@ -1,0 +1,22 @@
+{
+  "title": "Shimmory Reading Sync",
+  "description": "Send completed CrossPoint reading sessions to Shimmory.",
+  "config": {
+    "file": "/.crosspoint/plugins/shimmory/config.json"
+  },
+  "events": {
+    "reader.session": {
+      "request": {
+        "method": "POST",
+        "url": "{cfg.apiBase}/koreader/plugin/page-stats",
+        "headers": {
+          "Content-Type": "application/json",
+          "x-auth-user": "{cfg.username}",
+          "x-auth-key": "{cfg.password}"
+        },
+        "body": "{\"document\":\"{event.document}\",\"start_time\":{event.start_time},\"end_time\":{event.end_time},\"duration_seconds\":{event.duration_seconds},\"start_progress_bp\":{event.start_progress_bp},\"end_progress_bp\":{event.end_progress_bp},\"progress_scale\":{event.progress_scale}}"
+      },
+      "connect": true
+    }
+  }
+}
