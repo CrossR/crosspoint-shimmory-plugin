@@ -1,6 +1,6 @@
 {
   "title": "Shimmory Reading Sync",
-  "description": "Send completed CrossPoint reading sessions to Shimmory.",
+  "description": "Send completed CrossPoint reading sessions to Grimmory via Shimmory.",
   "config": {
     "file": "/.crosspoint/plugins/shimmory/config.json"
   },
@@ -8,7 +8,7 @@
     "reader.session": {
       "request": {
         "method": "POST",
-        "url": "{cfg.apiBase}/koreader/plugin/page-stats",
+        "url": "{cfg.apiBase}/koreader/plugin/sessions",
         "headers": {
           "Content-Type": "application/json",
           "x-auth-user": "{cfg.username}",

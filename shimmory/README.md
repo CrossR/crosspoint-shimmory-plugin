@@ -1,8 +1,11 @@
 # Shimmory Reading Sync for CrossPoint
 
-This SD plugin sends completed CrossPoint reading sessions to Shimmory's
-existing KOReader-compatible page-stat endpoint. It does not add a catalog or
-download books.
+This SD plugin sends completed CrossPoint reading sessions to Grimmory through
+Shimmory, so they appear in Grimmory's reading stats. It does not add a catalog
+or download books; use Shimmory's OPDS feed for that.
+
+It needs a Shimmory version with the `/koreader/plugin/sessions` endpoint (the
+`feat/reading-sessions` branch of Shimmory).
 
 ## Install
 
@@ -17,7 +20,8 @@ cannot change this absolute config path.
 copied onto the card during a running session will not receive events until the
 next restart.
 
-4. Open the CrossPoint web interface and find **Shimmory Reading Sync** under Settings.
+4. Open the CrossPoint web interface and find **Shimmory Reading Sync** under
+Settings.
 
 ## Configure
 
@@ -43,15 +47,13 @@ that file as sensitive.
 ## Delivery behavior
 
 CrossPoint queues a `reader.session` event after at least ten seconds of active
-forward reading. This plugin renders it as two ordered page-stat points and
-posts them to:
+forward reading. This plugin posts it to:
 
-`{apiBase}/koreader/plugin/page-stats`
+`{apiBase}/koreader/plugin/sessions`
 
-The first point carries the session's starting progress, start time, and active
-duration. The second carries the ending progress and compact end time. This lets
-BookOrbit derive duration, end progress, and progress delta, including sessions
-whose progress did not change.
+The request carries the book's hash, start and end time, active duration, and
+start and end progress. Shimmory matches the hash to a book in Grimmory and
+records one reading session.
 
 Delivery is **at least once** and in order. Shimmory ignores a session it has
 already recorded, so a retry is harmless. If Shimmory can't match the book, it
