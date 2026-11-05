@@ -123,7 +123,7 @@ class ShimmoryContractTests(unittest.TestCase):
         self.assertNotIn("innerHTML", source)
         self.assertIn("CrossPoint.registerPlugin", source)
         methods = set(re.findall(r"\bapi\.([A-Za-z_$][\w$]*)", source))
-        self.assertEqual(methods, {"dir", "writeFile", "pluginFile"})
+        self.assertEqual(methods, {"dir", "relay", "writeFile", "pluginFile"})
         self.assertNotRegex(source, r"console\.(?:log|warn|error)")
 
     def test_package_builder_is_deterministic_and_exact(self):

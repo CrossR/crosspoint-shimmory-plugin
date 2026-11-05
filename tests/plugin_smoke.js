@@ -80,6 +80,9 @@ async function settle() {
   const container = new FakeElement("div");
   const document = { createElement: (tag) => new FakeElement(tag) };
   const fetchCalls = [];
+  const relays = [];
+  let relayStatus = 200;
+  let relayError = false;
   const fetch = async (url) => {
     fetchCalls.push(url);
     return {
@@ -94,6 +97,11 @@ async function settle() {
     pluginFile(file) {
       assert.equal(file, "config.json");
       return `/plugin/shimmory/${file}`;
+    },
+    async relay(method, url, headers) {
+      relays.push({ method, url, headers });
+      if (relayError) throw new Error("relay failed");
+      return { status: relayStatus, headers: [], body: "{}" };
     },
     async writeFile(path, data) {
       writes.push({ path, data });
@@ -175,6 +183,38 @@ async function settle() {
     await button(container, "Save").click();
     assert.equal(saved(writes.length - 1).apiBase, expected, input);
   }
+
+  // Test connection calls the KOSync auth route with the MD5 credentials.
+  named(container, "apiBase").value = "https://books.example/xpoint/koreader";
+  named(container, "password").value = "";
+  relays.length = 0;
+  await button(container, "Test connection").click();
+  assert.equal(relays.length, 1);
+  assert.equal(relays[0].method, "GET");
+  assert.equal(relays[0].url, "https://books.example/xpoint/koreader/users/auth");
+  assert.equal(relays[0].headers["x-auth-user"], "léa");
+  assert.equal(relays[0].headers["x-auth-key"], md5(lastPassword));
+  assert.ok(shown().includes("Connected to Shimmory."));
+  assert.ok(!shown().includes(md5(lastPassword)));
+  for (const [status, text] of [
+    [401, "rejected the username or password"],
+    [404, "not found at that URL"],
+    [500, "HTTP 500"],
+  ]) {
+    relayStatus = status;
+    await button(container, "Test connection").click();
+    assert.ok(shown().includes(text), `status ${status}`);
+  }
+  relayError = true;
+  await button(container, "Test connection").click();
+  assert.ok(shown().includes("Could not reach Shimmory"));
+  // Save still succeeds when the check fails.
+  const before = writes.length;
+  await button(container, "Save").click();
+  assert.equal(writes.length, before + 1);
+  assert.ok(shown().includes("Configuration saved. Could not reach"));
+  relayError = false;
+  relayStatus = 200;
 
   // Invalid input is rejected without writing.
   const count = writes.length;

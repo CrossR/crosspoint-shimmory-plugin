@@ -142,7 +142,10 @@ CrossPoint.registerPlugin((container, api) => {
   saveButton.type = "button";
   const status = makeElement("p");
   status.setAttribute("role", "status");
+  const testButton = makeElement("button", "Test connection");
+  testButton.type = "button";
   actions.appendChild(saveButton);
+  actions.appendChild(testButton);
   container.appendChild(actions);
   container.appendChild(status);
 
@@ -172,6 +175,40 @@ CrossPoint.registerPlugin((container, api) => {
     return { apiBase, username, password };
   }
 
+  // Asks Shimmory's KOSync auth route whether the URL and credentials work.
+  // The request goes through the device (api.relay) because the settings page
+  // can't call another origin directly. Returns a message and never throws.
+  async function checkConnection(config) {
+    try {
+      const response = await api.relay("GET", `${config.apiBase}/koreader/users/auth`, {
+        accept: "application/json",
+        "x-auth-user": config.username,
+        "x-auth-key": config.password,
+      });
+      const code = Number(response && response.status);
+      if (code === 200) return "Connected to Shimmory.";
+      if (code === 401) return "Shimmory rejected the username or password.";
+      if (code === 404) {
+        return "Shimmory not found at that URL. Check the base URL, including any prefix such as /xpoint.";
+      }
+      return `Unexpected response from Shimmory (HTTP ${code || "unknown"}).`;
+    } catch (_error) {
+      return "Could not reach Shimmory. Check the URL and that the reader has WiFi.";
+    }
+  }
+
+  testButton.addEventListener("click", async () => {
+    const config = currentConfig();
+    if (!config) return;
+    testButton.disabled = true;
+    setStatus("Checking connection…");
+    try {
+      setStatus(await checkConnection(config));
+    } finally {
+      testButton.disabled = false;
+    }
+  });
+
   saveButton.addEventListener("click", async () => {
     const config = currentConfig();
     if (!config) return;
@@ -184,7 +221,8 @@ CrossPoint.registerPlugin((container, api) => {
       storedPassword = config.password;
       passwordInput.value = "";
       apiBaseInput.value = config.apiBase;
-      setStatus("Configuration saved.");
+      setStatus("Configuration saved. Checking connection…");
+      setStatus(`Configuration saved. ${await checkConnection(config)}`);
     } catch (_error) {
       setStatus("Unable to save configuration.");
     } finally {
