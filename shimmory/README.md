@@ -74,6 +74,13 @@ A "Shimmory: session sent" popup appears when a session is delivered.
 Delivery still needs a saved WiFi network, enough battery, and a reachable
 Shimmory server.
 
+**Queue limit:** CrossPoint keeps up to about 4 KB of queued events per plugin,
+roughly a dozen sessions, and each sync delivers at most 4 of them. Past the
+limit the firmware **discards the whole queue**, not only the oldest sessions.
+If you read away from WiFi for a few days, sync (long-press or Home button
+gestures can be set to "Sync" in the reader's settings) whenever you're on
+WiFi, and watch for the popup.
+
 ## Upgrade
 
 1. Keep `/.crosspoint/plugins/shimmory/config.json`.
