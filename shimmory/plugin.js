@@ -179,7 +179,8 @@ CrossPoint.registerPlugin((container, api) => {
     setStatus("Saving configuration…");
     try {
       const data = encodeUtf8Base64(`${JSON.stringify(config, null, 2)}\n`);
-      await api.writeFile("config.json", data);
+      const dir = String(api.dir || "/.crosspoint/plugins/shimmory/").replace(/\/+$/, "");
+      await api.writeFile(`${dir}/config.json`, data);
       storedPassword = config.password;
       passwordInput.value = "";
       apiBaseInput.value = config.apiBase;

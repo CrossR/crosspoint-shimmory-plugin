@@ -90,6 +90,7 @@ async function settle() {
     };
   };
   const api = {
+    dir: "/.crosspoint/plugins/shimmory/",
     pluginFile(file) {
       assert.equal(file, "config.json");
       return `/plugin/shimmory/${file}`;
@@ -133,7 +134,7 @@ async function settle() {
 
   // A blank password keeps the stored one.
   await button(container, "Save").click();
-  assert.equal(writes[0].path, "config.json");
+  assert.equal(writes[0].path, "/.crosspoint/plugins/shimmory/config.json");
   assert.deepEqual(saved(0), {
     apiBase: "https://books.example/xpoint",
     username: "léa",
