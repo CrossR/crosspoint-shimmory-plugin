@@ -38,7 +38,14 @@ plugin saves only its MD5 hash, because that is what CrossPoint's KOSync client
 sends and what Grimmory stores. The saved value is never displayed; leave the
 field blank on later saves to keep it unchanged.
 
-Select **Save**.
+- **Send sessions at sleep:** on by default. When the reader goes to sleep, it
+joins the last WiFi network it used and delivers queued sessions. Turn it off
+when travelling, so sleep doesn't wait for a network that isn't there. Sessions
+then stay queued until you sync. This changes `device.json`, so restart the
+reader after saving.
+
+Select **Save**. Saving also checks the URL and credentials with Shimmory, and
+**Test connection** does the same without saving.
 
 `config.example.json` is an inert example. The plugin writes the active settings
 to `config.json`. The saved hash is enough to authenticate to Shimmory, so treat

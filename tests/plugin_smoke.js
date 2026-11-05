@@ -13,6 +13,7 @@ class FakeElement {
     this.style = {};
     this.textContent = "";
     this.value = "";
+    this.checked = false;
     this.type = "";
     this.name = "";
     this.disabled = false;
@@ -83,19 +84,23 @@ async function settle() {
   const relays = [];
   let relayStatus = 200;
   let relayError = false;
+  const deviceJson = {
+    config: { file: "/.crosspoint/plugins/shimmory/config.json" },
+    events: { "reader.session": { request: { method: "POST" }, toast: "x", connect: true } },
+  };
   const fetch = async (url) => {
     fetchCalls.push(url);
     return {
       ok: true,
       async json() {
-        return existing;
+        return url.endsWith("device.json") ? deviceJson : existing;
       },
     };
   };
   const api = {
     dir: "/.crosspoint/plugins/shimmory/",
     pluginFile(file) {
-      assert.equal(file, "config.json");
+      assert.ok(["config.json", "device.json"].includes(file));
       return `/plugin/shimmory/${file}`;
     },
     async relay(method, url, headers) {
@@ -133,7 +138,8 @@ async function settle() {
   const shown = () => allNodes(container).map((node) => node.textContent).join(" ");
   const saved = (index) => JSON.parse(Buffer.from(writes[index].data, "base64").toString("utf8"));
 
-  assert.deepEqual(fetchCalls, ["/plugin/shimmory/config.json"]);
+  assert.deepEqual(fetchCalls.sort(), ["/plugin/shimmory/config.json", "/plugin/shimmory/device.json"]);
+  assert.equal(named(container, "sendAtSleep").checked, true);
   assert.equal(named(container, "apiBase").value, "https://books.example/xpoint");
   assert.equal(named(container, "username").value, "léa");
   assert.equal(named(container, "password").value, "");
@@ -215,6 +221,29 @@ async function settle() {
   assert.ok(shown().includes("Configuration saved. Could not reach"));
   relayError = false;
   relayStatus = 200;
+
+  // Sleep toggle: unchanged means device.json is not rewritten.
+  const deviceWrites = () => writes.filter((write) => write.path.endsWith("/device.json"));
+  assert.equal(deviceWrites().length, 0);
+  // Unticking removes "connect", keeps everything else, and asks for a restart.
+  named(container, "sendAtSleep").checked = false;
+  await button(container, "Save").click();
+  assert.equal(deviceWrites().length, 1);
+  assert.equal(deviceWrites()[0].path, "/.crosspoint/plugins/shimmory/device.json");
+  const offDoc = JSON.parse(Buffer.from(deviceWrites()[0].data, "base64").toString("utf8"));
+  assert.equal("connect" in offDoc.events["reader.session"], false);
+  assert.equal(offDoc.events["reader.session"].toast, "x");
+  assert.equal(offDoc.config.file, deviceJson.config.file);
+  assert.ok(shown().includes("Restart the reader"));
+  // Saving again with no change does not rewrite it.
+  await button(container, "Save").click();
+  assert.equal(deviceWrites().length, 1);
+  // Ticking it again restores "connect": true.
+  named(container, "sendAtSleep").checked = true;
+  await button(container, "Save").click();
+  assert.equal(deviceWrites().length, 2);
+  const onDoc = JSON.parse(Buffer.from(deviceWrites()[1].data, "base64").toString("utf8"));
+  assert.equal(onDoc.events["reader.session"].connect, true);
 
   // Invalid input is rejected without writing.
   const count = writes.length;

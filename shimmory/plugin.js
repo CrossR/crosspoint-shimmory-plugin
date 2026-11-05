@@ -137,6 +137,23 @@ CrossPoint.registerPlugin((container, api) => {
   const usernameInput = makeField("KOSync username", "username", "text");
   const passwordInput = makeField("KOSync password", "password", "password");
 
+  // Whether the reader joins WiFi by itself when it goes to sleep. This lives
+  // in device.json ("connect": true on reader.session), which the firmware reads.
+  const sleepLabel = makeElement("label");
+  const sleepInput = makeElement("input");
+  sleepInput.name = "sendAtSleep";
+  sleepInput.type = "checkbox";
+  sleepInput.checked = true;
+  sleepLabel.appendChild(sleepInput);
+  sleepLabel.appendChild(
+    makeElement(
+      "span",
+      " Send sessions at sleep (joins your last WiFi network; turn off when travelling)",
+    ),
+  );
+  container.appendChild(sleepLabel);
+  let deviceDoc = null;
+
   const actions = makeElement("div");
   const saveButton = makeElement("button", "Save");
   saveButton.type = "button";
@@ -209,6 +226,32 @@ CrossPoint.registerPlugin((container, api) => {
     }
   });
 
+  function pluginDir() {
+    return String(api.dir || "/.crosspoint/plugins/shimmory/").replace(/\/+$/, "");
+  }
+
+  function sessionHandler() {
+    return deviceDoc && deviceDoc.events && deviceDoc.events["reader.session"];
+  }
+
+  // Rewrites device.json only when the box differs from what is stored.
+  // Returns true when the file changed.
+  async function saveSleepMode() {
+    const handler = sessionHandler();
+    const want = sleepInput.checked;
+    if (!handler || want === (handler.connect === true)) return false;
+    const next = JSON.parse(JSON.stringify(deviceDoc));
+    if (want) next.events["reader.session"].connect = true;
+    else delete next.events["reader.session"].connect;
+    await api.writeFile(
+      `${pluginDir()}/device.json`,
+      encodeUtf8Base64(`${JSON.stringify(next, null, 2)}
+`),
+    );
+    deviceDoc = next;
+    return true;
+  }
+
   saveButton.addEventListener("click", async () => {
     const config = currentConfig();
     if (!config) return;
@@ -216,13 +259,14 @@ CrossPoint.registerPlugin((container, api) => {
     setStatus("Saving configuration…");
     try {
       const data = encodeUtf8Base64(`${JSON.stringify(config, null, 2)}\n`);
-      const dir = String(api.dir || "/.crosspoint/plugins/shimmory/").replace(/\/+$/, "");
-      await api.writeFile(`${dir}/config.json`, data);
+      await api.writeFile(`${pluginDir()}/config.json`, data);
       storedPassword = config.password;
       passwordInput.value = "";
       apiBaseInput.value = config.apiBase;
-      setStatus("Configuration saved. Checking connection…");
-      setStatus(`Configuration saved. ${await checkConnection(config)}`);
+      const sleepChanged = await saveSleepMode();
+      const restart = sleepChanged ? " Restart the reader to apply the sleep setting." : "";
+      setStatus(`Configuration saved.${restart} Checking connection…`);
+      setStatus(`Configuration saved.${restart} ${await checkConnection(config)}`);
     } catch (_error) {
       setStatus("Unable to save configuration.");
     } finally {
@@ -249,5 +293,22 @@ CrossPoint.registerPlugin((container, api) => {
     }
   }
 
+  async function loadDeviceMode() {
+    try {
+      const response = await fetch(api.pluginFile("device.json"), {
+        cache: "no-store",
+      });
+      if (!response.ok) throw new Error("no device.json");
+      deviceDoc = await response.json();
+      const handler = sessionHandler();
+      if (handler) sleepInput.checked = handler.connect === true;
+      else sleepInput.disabled = true;
+    } catch (_error) {
+      deviceDoc = null;
+      sleepInput.disabled = true;
+    }
+  }
+
+  loadDeviceMode();
   loadConfig();
 });
