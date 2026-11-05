@@ -70,7 +70,8 @@ class ShimmoryContractTests(unittest.TestCase):
         self.assertEqual(set(device["events"]), {"reader.session"})
         handler = device["events"]["reader.session"]
         self.assertIs(handler["connect"], True)
-        self.assertEqual(set(handler), {"request", "connect"})
+        self.assertEqual(set(handler), {"request", "connect", "toast"})
+        self.assertEqual(handler["toast"], "Shimmory: session sent")
         request = handler["request"]
         self.assertEqual(request["method"], "POST")
         self.assertEqual(request["url"], "{cfg.apiBase}/koreader/plugin/sessions")

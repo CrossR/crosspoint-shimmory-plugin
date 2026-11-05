@@ -68,6 +68,8 @@ accepts the session and logs a warning, so one unknown book doesn't hold up
 later sessions. Any non-2xx response leaves the event queued and blocks the ones
 after it.
 
+A "Shimmory: session sent" popup appears when a session is delivered.
+
 `connect: true` lets CrossPoint bring up WiFi when the device goes to sleep.
 Delivery still needs a saved WiFi network, enough battery, and a reachable
 Shimmory server.
