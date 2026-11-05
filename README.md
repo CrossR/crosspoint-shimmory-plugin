@@ -13,11 +13,14 @@ authentication, payloads, or storage in firmware.
 
 Grab the latest release from the [Releases
 page](https://github.com/CrossR/crosspoint-shimmory-plugin/releases), and unzip
-it into your CrossPoint plugins directory:
+it into your CrossPoint plugins directory (`/.crosspoint/plugins/shimmory/`):
 
 ```text
 /.crosspoint/plugins/shimmory/
 ```
+
+This can also be built locally with `python3 scripts/build_package.py`, which
+produces a ZIP in `dist/` that can be unzipped into the same place.
 
 Restart CrossPoint after installation, then configure **Shimmory Reading Sync**
 from the web interface’s Settings page.
@@ -28,9 +31,17 @@ The plugin requires a CrossPoint build that supports SD plugins and the generic
 [crosspoint-reader/crosspoint-reader#2612](https://github.com/crosspoint-reader/crosspoint-reader/issues/2612)
 for the upstream feature context.
 
-Detailed installation, configuration, delivery, upgrade, and troubleshooting
-instructions are in [`shimmory/README.md`](shimmory/README.md) and are included
-in the ZIP.
+Once installed, make sure you've got plugins enabled in the Connections part of
+the settings menu, restart the device and then connect to the web interface.
+You should see a new "Shimmory Reading Sync" section in the plugins menu. Enter
+the various bits of information below:
+
+ - Base URL: `https://your-shimmory-instance.com:port_number/xpoint`or similar,
+ depending on your Shimmory instance. This is without the final `/koreader`
+ part.
+
+ - Your `KoSync` Username + Password.
+
 
 ## What it syncs
 
